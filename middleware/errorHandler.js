@@ -5,9 +5,20 @@ const errorHandler = (err, _req, res, _next) => {
   let status = err.statusCode ?? 500;
   let message = err.message ?? "Internal server error";
 
+  if (err.name === "ValidationError") {
+    status = 400;
+    message = Object.values(err.errors)
+      .map((val) => val.message)
+      .join(", ");
+  }
+  if (err.name === "CastError") {
+    status = 400;
+    message = `Invalid input for field ${err.path}: ${err.value}`;
+  }
+
   if (err.code === 11000) {
     status = 409;
-    message = "Email already registered";
+    message = `An account with that ${Object.keys(err.keyValue)[0]} already exists.`;
   }
 
   res.status(status).json({ success: false, message });

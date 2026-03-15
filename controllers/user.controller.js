@@ -2,10 +2,10 @@ const user = require("../models/user.model");
 
 const getUser = async (req, res, next) => {
   try {
-    const foundUser = await user.findById(req.user._id, { password: 0 });
+    const foundUser = await user.findById(req.params.id, { password: 0 });
     if (!foundUser) {
       return res
-        .status(401)
+        .status(404)
         .json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, result: foundUser });
@@ -16,6 +16,13 @@ const getUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
+    if (req.user._id.toString() !== req.params.id && req.user.role === 1) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You can only update your own profile.",
+      });
+    }
+
     const updatedUser = await user
       .findByIdAndUpdate(req.params.id, req.body, {
         new: true,
@@ -45,18 +52,23 @@ const getAllUsers = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
+    if (req.user._id.toString() !== req.params.id && req.user.role === 1) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You can only delete your own profile.",
+      });
+    }
+
     const deletedUser = await user.findByIdAndDelete(req.params.id);
     if (!deletedUser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    res
-      .status(200)
-      .json({
-        success: true,
-        result: { message: "User deleted successfully" },
-      });
+    res.status(200).json({
+      success: true,
+      result: { message: "User deleted successfully" },
+    });
   } catch (error) {
     next(error);
   }
