@@ -1,7 +1,7 @@
 /**
  * Central error handler. Sends consistent JSON: { success: false, message }.
  */
-export const errorHandler = (err, _req, res, _next) => {
+const errorHandler = (err, _req, res, _next) => {
   let status = err.statusCode ?? 500;
   let message = err.message ?? "Internal server error";
 
@@ -12,3 +12,5 @@ export const errorHandler = (err, _req, res, _next) => {
 
   res.status(status).json({ success: false, message });
 };
+
+module.exports = { errorHandler };

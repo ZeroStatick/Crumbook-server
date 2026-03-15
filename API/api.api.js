@@ -22,8 +22,8 @@ async function API_call(path, method, body) {
 const get_all_users = () => API_call("/users");
 
 const edit_user = (user_id, new_user_data) =>
-  API_call(`/users/${user_id}`, "PATCH", new_user_data);
+  API_call(`/user/${user_id}`, "PUT", new_user_data);
 
-const delete_user = (user_id) => API_call(`/users/${user_id}`, "DELETE");
+const delete_user = (user_id) => API_call(`/user/${user_id}`, "DELETE");
 
 module.exports = { get_all_users, edit_user, delete_user };
