@@ -4,14 +4,8 @@ const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res, next) => {
   try {
-    const existing = await user.findOne({
-      email: req.body.email.toLowerCase(),
-    });
-    if (existing) {
-      return res
-        .status(409)
-        .json({ success: false, message: "Email already registered" });
-    }
+    // The check for an existing email is removed because the unique index on the
+    // User model and the global error handler already manage this. This keeps the controller cleaner.
     const newUser = await user.create(req.body);
     newUser.password = undefined;
 
