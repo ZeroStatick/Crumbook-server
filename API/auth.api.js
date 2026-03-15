@@ -1,31 +1,16 @@
-const register = async (userData) => {
-  const response = await fetch("/register", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(userData),
-  });
-  const response_body = await response.json();
-  if (!response_body.success) {
-    throw new Error(response_body.message);
-  }
-  localStorage.setItem("user_data", JSON.stringify(response_body.result));
+const { API_call } = require("./api.api.js");
 
-  return response_body.result;
+const register = async (userData) => {
+  const result = await API_call("/api/auth/register", "POST", userData);
+  // Note: Your backend register controller currently doesn't return a token, just the user data.
+  localStorage.setItem("user_data", JSON.stringify(result));
+  return result;
 };
 
 const login = async (userData) => {
-  const response = await fetch("/login", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(userData),
-  });
-  const response_body = await response.json();
-  if (!response_body.success) {
-    throw new Error(response_body.message);
-  }
-  localStorage.setItem("user_data", JSON.stringify(response_body.result));
-
-  return response_body.result;
+  const result = await API_call("/api/auth/login", "POST", userData);
+  localStorage.setItem("user_data", JSON.stringify(result));
+  return result;
 };
 
 const logout = () => {
