@@ -16,11 +16,20 @@ const getUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    if (req.user._id.toString() !== req.params.id && req.user.role === 1) {
+    const isSelf = req.user._id.toString() === req.params.id;
+    const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
+
+    if (!isSelf && !isAdminOrOwner) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: You can only update your own profile.",
+        message:
+          "Forbidden: You can only update your own profile or you must be an admin.",
       });
+    }
+
+    // SECURITY: Prevent a non-admin user from changing their own role.
+    if (req.body.role && !isAdminOrOwner) {
+      delete req.body.role;
     }
 
     const updatedUser = await user
@@ -52,10 +61,14 @@ const getAllUsers = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    if (req.user._id.toString() !== req.params.id && req.user.role === 1) {
+    const isSelf = req.user._id.toString() === req.params.id;
+    const isAdminOrOwner = req.user.role > 1;
+
+    if (!isSelf && !isAdminOrOwner) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: You can only delete your own profile.",
+        message:
+          "Forbidden: You can only delete your own profile or you must be an admin.",
       });
     }
 
