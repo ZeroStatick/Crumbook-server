@@ -111,11 +111,21 @@ const deleteRecipe = async (req, res, next) => {
   }
 };
 
+const getRecipesByAuthor = async (req, res, next) => {
+  try {
+    const recipes = await Recipe.find({ author: req.params.authorId });
+    res.status(200).json({ success: true, result: recipes });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createRecipe,
   getAllRecipes,
   getRecipeById,
   updateRecipe,
   deleteRecipe,
+  getRecipesByAuthor,
 };
 
