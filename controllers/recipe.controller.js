@@ -105,9 +105,7 @@ const deleteRecipe = async (req, res, next) => {
     }
 
     await recipe.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: "Recipe deleted successfully" });
+    res.status(200).json({ success: true, result: { message: "Recipe deleted successfully" } });
   } catch (error) {
     next(error);
   }
