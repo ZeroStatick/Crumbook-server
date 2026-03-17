@@ -2,7 +2,7 @@ const user = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-exports.register = async (req, res, next) => {
+const register = async (req, res, next) => {
   try {
     // The check for an existing email is removed because the unique index on the
     // User model and the global error handler already manage this. This keeps the controller cleaner.
@@ -15,7 +15,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res, next) => {
+const login = async (req, res, next) => {
   try {
     const foundUser = await user
       .findOne({ email: req.body.email.toLowerCase() })
@@ -46,3 +46,5 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports = { register, login };

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-exports.auth = (req, res, next) => {
+const auth = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
@@ -20,7 +20,7 @@ exports.auth = (req, res, next) => {
   }
 };
 
-exports.ownerAuth = (req, res, next) => {
+const ownerAuth = (req, res, next) => {
   if (req.user?.role !== 3) {
     return res
       .status(403)
@@ -29,7 +29,7 @@ exports.ownerAuth = (req, res, next) => {
   next();
 };
 
-exports.moderatorAuth = (req, res, next) => {
+const moderatorAuth = (req, res, next) => {
   if (req.user?.role !== 2) {
     return res
       .status(403)
@@ -38,7 +38,7 @@ exports.moderatorAuth = (req, res, next) => {
   next();
 };
 
-exports.ownerAndUserAuth = (req, res, next) => {
+const ownerAndUserAuth = (req, res, next) => {
   if (req.user?.role !== 3 && req.user?._id !== req.params.id) {
     return res
       .status(403)
@@ -47,7 +47,7 @@ exports.ownerAndUserAuth = (req, res, next) => {
   next();
 };
 
-exports.moderatorAndOwnerAuth = (req, res, next) => {
+const moderatorAndOwnerAuth = (req, res, next) => {
   if (req.user?.role !== 2 && req.user?.role !== 3) {
     return res
       .status(403)
@@ -55,3 +55,6 @@ exports.moderatorAndOwnerAuth = (req, res, next) => {
   }
   next();
 };
+
+module.exports = { auth, ownerAuth, moderatorAuth, ownerAndUserAuth, moderatorAndOwnerAuth };
+

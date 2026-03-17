@@ -1,6 +1,6 @@
 const Recipe = require("../models/recipe.model");
 
-exports.createRecipe = async (req, res, next) => {
+const createRecipe = async (req, res, next) => {
   try {
     // Attach the currently logged-in user's ID as the author
     const newRecipe = new Recipe({
@@ -15,7 +15,7 @@ exports.createRecipe = async (req, res, next) => {
   }
 };
 
-exports.getAllRecipes = async (req, res, next) => {
+const getAllRecipes = async (req, res, next) => {
   try {
     // Populate allows us to fetch the author's details (like name) instead of just their ID
     const recipes = await Recipe.find().populate("author", "name email");
@@ -25,7 +25,7 @@ exports.getAllRecipes = async (req, res, next) => {
   }
 };
 
-exports.getRecipeById = async (req, res, next) => {
+const getRecipeById = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id).populate(
       "author",
@@ -42,7 +42,7 @@ exports.getRecipeById = async (req, res, next) => {
   }
 };
 
-exports.updateRecipe = async (req, res, next) => {
+const updateRecipe = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
@@ -83,7 +83,7 @@ exports.updateRecipe = async (req, res, next) => {
   }
 };
 
-exports.deleteRecipe = async (req, res, next) => {
+const deleteRecipe = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
@@ -112,3 +112,12 @@ exports.deleteRecipe = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports = {
+  createRecipe,
+  getAllRecipes,
+  getRecipeById,
+  updateRecipe,
+  deleteRecipe,
+};
+
