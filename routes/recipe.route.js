@@ -4,12 +4,12 @@ const recipeController = require("../controllers/recipe.controller");
 const { auth } = require("../middleware/auth.middleware");
 
 // Public routes
-router.get("/", recipeController.getAllRecipes);
-router.get("/:id", recipeController.getRecipeById);
+router.get("/recipes", recipeController.getAllRecipes);
+router.get("/recipe/:id", recipeController.getRecipeById);
 
 // Protected routes (require valid JWT)
-router.post("/", auth, recipeController.createRecipe);
-router.put("/:id", auth, recipeController.updateRecipe);
-router.delete("/:id", auth, recipeController.deleteRecipe);
+router.post("/recipes", auth, recipeController.createRecipe);
+router.put("/recipe/:id", auth, recipeController.updateRecipe);
+router.delete("/recipe/:id", auth, recipeController.deleteRecipe);
 
 module.exports = router;
