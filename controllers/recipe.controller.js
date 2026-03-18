@@ -28,7 +28,10 @@ const getAllRecipes = async (req, res, next) => {
 
 const getAllRecipesByUserId = async (req, res, next) => {
   try {
-    const recipes = Recipe.find(req.params.author).populate("author");
+    const recipes = await Recipe.find({ author: req.params.userId }).populate(
+      "author",
+      "name email",
+    );
     res.status(200).json({ success: true, result: recipes });
   } catch (e) {
     next(e);
@@ -62,7 +65,7 @@ const updateRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -103,7 +106,7 @@ const deleteRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1;
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -127,7 +130,6 @@ const deleteRecipe = async (req, res, next) => {
 module.exports = {
   createRecipe,
   getAllRecipes,
-  getRecipeById,
   getRecipeById,
   updateRecipe,
   deleteRecipe,

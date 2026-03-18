@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/recipes", recipeRouter);
-app.use("/api/ingredient", ingredientRouter);
+app.use("/api/ingredients", ingredientRouter);
 
 //404 on routes
 app.use((_req, res) => {

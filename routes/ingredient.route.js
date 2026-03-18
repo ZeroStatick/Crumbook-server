@@ -19,3 +19,5 @@ router.delete(
   moderatorAndOwnerAuth,
   ingredientController.deleteIngredient,
 );
+
+module.exports = router;

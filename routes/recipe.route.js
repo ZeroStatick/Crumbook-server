@@ -6,6 +6,7 @@ const { auth } = require("../middleware/auth.middleware.js");
 // Public routes
 router.get("/", recipeController.getAllRecipes);
 router.get("/:id", recipeController.getRecipeById);
+router.get("/user/:id", recipeController.getAllRecipesByUserId);
 
 // Protected routes (require valid JWT)
 router.post("/", auth, recipeController.createRecipe);
