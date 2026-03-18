@@ -1,11 +1,12 @@
-const Recipe = require("../models/recipe.model");
+const Recipe = require("../models/recipe.model.js");
 
-exports.createRecipe = async (req, res, next) => {
+const createRecipe = async (req, res, next) => {
   try {
     // Attach the currently logged-in user's ID as the author
     const newRecipe = new Recipe({
       ...req.body,
       author: req.user._id,
+      original_author: req.user._id,
     });
 
     await newRecipe.save();
@@ -15,7 +16,7 @@ exports.createRecipe = async (req, res, next) => {
   }
 };
 
-exports.getAllRecipes = async (req, res, next) => {
+const getAllRecipes = async (req, res, next) => {
   try {
     // Populate allows us to fetch the author's details (like name) instead of just their ID
     const recipes = await Recipe.find().populate("author", "name email");
@@ -25,7 +26,19 @@ exports.getAllRecipes = async (req, res, next) => {
   }
 };
 
-exports.getRecipeById = async (req, res, next) => {
+const getAllRecipesByUserId = async (req, res, next) => {
+  try {
+    const recipes = await Recipe.find({ author: req.params.userId }).populate(
+      "author",
+      "name email",
+    );
+    res.status(200).json({ success: true, result: recipes });
+  } catch (e) {
+    next(e);
+  }
+};
+
+const getRecipeById = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id).populate(
       "author",
@@ -42,7 +55,7 @@ exports.getRecipeById = async (req, res, next) => {
   }
 };
 
-exports.updateRecipe = async (req, res, next) => {
+const updateRecipe = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
@@ -52,7 +65,7 @@ exports.updateRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -83,7 +96,7 @@ exports.updateRecipe = async (req, res, next) => {
   }
 };
 
-exports.deleteRecipe = async (req, res, next) => {
+const deleteRecipe = async (req, res, next) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
@@ -93,7 +106,7 @@ exports.deleteRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1;
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -105,10 +118,20 @@ exports.deleteRecipe = async (req, res, next) => {
     }
 
     await recipe.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: "Recipe deleted successfully" });
+    res.status(200).json({
+      success: true,
+      result: { message: "Recipe deleted successfully" },
+    });
   } catch (error) {
     next(error);
   }
+};
+
+module.exports = {
+  createRecipe,
+  getAllRecipes,
+  getRecipeById,
+  updateRecipe,
+  deleteRecipe,
+  getAllRecipesByUserId,
 };
