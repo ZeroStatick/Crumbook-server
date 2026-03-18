@@ -1,2 +1,4 @@
 .env
-node_modules
+node_modules 
+// dont forget to add jwt_secret and mongo_URL to .env
+ask.js
