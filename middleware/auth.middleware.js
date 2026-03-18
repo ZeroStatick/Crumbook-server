@@ -56,5 +56,10 @@ const moderatorAndOwnerAuth = (req, res, next) => {
   next();
 };
 
-module.exports = { auth, ownerAuth, moderatorAuth, ownerAndUserAuth, moderatorAndOwnerAuth };
-
+module.exports = {
+  auth,
+  ownerAuth,
+  ownerAndUserAuth,
+  moderatorAuth,
+  moderatorAndOwnerAuth,
+};

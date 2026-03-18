@@ -1,4 +1,4 @@
-const Recipe = require("../models/recipe.model");
+const Recipe = require("../models/recipe.model.js");
 
 const createRecipe = async (req, res, next) => {
   try {
@@ -6,6 +6,7 @@ const createRecipe = async (req, res, next) => {
     const newRecipe = new Recipe({
       ...req.body,
       author: req.user._id,
+      original_author: req.user._id,
     });
 
     await newRecipe.save();
@@ -22,6 +23,18 @@ const getAllRecipes = async (req, res, next) => {
     res.status(200).json({ success: true, result: recipes });
   } catch (error) {
     next(error);
+  }
+};
+
+const getAllRecipesByUserId = async (req, res, next) => {
+  try {
+    const recipes = await Recipe.find({ author: req.params.userId }).populate(
+      "author",
+      "name email",
+    );
+    res.status(200).json({ success: true, result: recipes });
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -52,7 +65,7 @@ const updateRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -93,7 +106,7 @@ const deleteRecipe = async (req, res, next) => {
     }
 
     // Authorization: Ensure the user is the author or an admin/owner.
-    const isAuthor = recipe.author.toString() === req.user._id;
+    const isAuthor = recipe.author.toString() === req.user._id.toString();
     const isAdminOrOwner = req.user.role > 1;
 
     if (!isAuthor && !isAdminOrOwner) {
@@ -105,20 +118,14 @@ const deleteRecipe = async (req, res, next) => {
     }
 
     await recipe.deleteOne();
-    res.status(200).json({ success: true, result: { message: "Recipe deleted successfully" } });
+    res.status(200).json({
+      success: true,
+      result: { message: "Recipe deleted successfully" },
+    });
   } catch (error) {
     next(error);
   }
 };
-
-const getRecipesByAuthor = async (req, res, next) => {
-  try {
-    const recipes = await Recipe.find({ author: req.params.authorId });
-    res.status(200).json({ success: true, result: recipes });
-  } catch (error) {
-    next(error);
-  }
-}
 
 module.exports = {
   createRecipe,
@@ -126,6 +133,5 @@ module.exports = {
   getRecipeById,
   updateRecipe,
   deleteRecipe,
-  getRecipesByAuthor,
+  getAllRecipesByUserId,
 };
-

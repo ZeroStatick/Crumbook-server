@@ -1,19 +1,11 @@
-const user = require("../models/user.model");
+const user = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res, next) => {
   try {
-    // Ensure the email is saved in lowercase to match the login search behavior
-    if (req.body.email) {
-      req.body.email = req.body.email.toLowerCase();
-    }
-
-    // The check for an existing email is removed because the unique index on the
-    // User model and the global error handler already manage this. This keeps the controller cleaner.
+    req.body.email = req.body.email.toLowerCase();
     const newUser = await user.create(req.body);
-    
-    // Convert to a plain object to safely strip the password before sending to the client
     const userResponse = newUser.toJSON();
     delete userResponse.password;
 
@@ -55,4 +47,4 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login };
+module.exports = { login, register };

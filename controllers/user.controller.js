@@ -1,4 +1,4 @@
-const user = require("../models/user.model");
+const user = require("../models/user.model.js");
 
 const getUser = async (req, res, next) => {
   try {
@@ -28,7 +28,7 @@ const updateUser = async (req, res, next) => {
     }
 
     // SECURITY: Prevent a non-admin user from changing their own role.
-    if (req.body.role && !isAdminOrOwner) {
+    if (req.body.role !== undefined && !isAdminOrOwner) {
       delete req.body.role;
     }
 

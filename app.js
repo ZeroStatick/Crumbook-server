@@ -6,6 +6,7 @@ const app = express();
 const authRouter = require("./routes/auth.route.js");
 const userRouter = require("./routes/user.route.js");
 const recipeRouter = require("./routes/recipe.route.js");
+const ingredientRouter = require("./routes/ingredient.route.js");
 const connectDB = require("./config/connectDB.js");
 const { errorHandler } = require("./middleware/errorHandler.js");
 
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/recipes", recipeRouter);
+app.use("/api/ingredients", ingredientRouter);
 
 //404 on routes
 app.use((_req, res) => {

@@ -14,11 +14,15 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    profile_picture: {
+      type: String,
+      default: "nobody.png", // don't forget to change it
+    },
     password: {
       type: String,
       required: true,
       select: false,
-    },
+    }, // 1 is user, 2 is admin/moderator, 3 is owners/devs
     role: {
       type: Number,
       default: 1,
@@ -28,14 +32,13 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
   },
-  // 1 is user, 2 is admin/moderator, 3 is owners/devs
+
   { timestamps: true },
 );
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 const userModel = mongoose.model("user", userSchema);
 
