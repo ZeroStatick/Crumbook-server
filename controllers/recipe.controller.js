@@ -36,6 +36,29 @@ const getAllRecipes = async (req, res, next) => {
   }
 };
 
+const getRecipeByIngredients = async (req, res, next) => {
+  try {
+    const { ingredients } = req.query;
+
+    if (!ingredients) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No ingredients provided" });
+    }
+
+    const ingredientIds = ingredients.split(",");
+
+    // Find recipes that contain ALL the provided ingredient IDs
+    const recipes = await Recipe.find({
+      "ingredients.item": { $all: ingredientIds },
+    }).populate("author", "name email");
+
+    res.status(200).json({ success: true, result: recipes });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getAllRecipesByUserId = async (req, res, next) => {
   try {
     const recipes = await Recipe.find({ author: req.params.id }).populate(
@@ -136,7 +159,6 @@ const deleteRecipe = async (req, res, next) => {
     next(error);
   }
 };
-
 module.exports = {
   createRecipe,
   getAllRecipes,
@@ -144,4 +166,5 @@ module.exports = {
   updateRecipe,
   deleteRecipe,
   getAllRecipesByUserId,
+  getRecipeByIngredients,
 };
