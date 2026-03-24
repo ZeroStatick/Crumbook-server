@@ -40,7 +40,7 @@ const login = async (req, res, next) => {
 
     res.json({
       success: true,
-      result: { user: foundUser.toJSON(), token: "Bearer " + token },
+      result: { user: foundUser.toJSON(), token: token },
     });
   } catch (error) {
     next(error);
