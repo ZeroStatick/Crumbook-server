@@ -2,12 +2,22 @@ const Recipe = require("../models/recipe.model.js");
 
 const createRecipe = async (req, res, next) => {
   try {
+    const recipeData = { ...req.body };
+
     // Attach the currently logged-in user's ID as the author
-    const newRecipe = new Recipe({
-      ...req.body,
-      author: req.user._id,
-      original_author: req.user._id,
-    });
+    recipeData.author = req.user._id;
+
+    // If it's a new recipe (not a fork), set original_author to current user
+    if (!recipeData.original_author) {
+      recipeData.original_author = req.user._id;
+    }
+
+    const newRecipe = new Recipe(recipeData);
+
+    // If it's a new recipe, it is its own original
+    if (!recipeData.original_recipe) {
+      newRecipe.original_recipe = newRecipe._id;
+    }
 
     await newRecipe.save();
     res.status(201).json({ success: true, result: newRecipe });
@@ -26,9 +36,32 @@ const getAllRecipes = async (req, res, next) => {
   }
 };
 
+const getRecipeByIngredients = async (req, res, next) => {
+  try {
+    const { ingredients } = req.query;
+
+    if (!ingredients) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No ingredients provided" });
+    }
+
+    const ingredientIds = ingredients.split(",");
+
+    // Find recipes that contain ALL the provided ingredient IDs
+    const recipes = await Recipe.find({
+      "ingredients.item": { $all: ingredientIds },
+    }).populate("author", "name email");
+
+    res.status(200).json({ success: true, result: recipes });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getAllRecipesByUserId = async (req, res, next) => {
   try {
-    const recipes = await Recipe.find({ author: req.params.userId }).populate(
+    const recipes = await Recipe.find({ author: req.params.id }).populate(
       "author",
       "name email",
     );
@@ -126,7 +159,6 @@ const deleteRecipe = async (req, res, next) => {
     next(error);
   }
 };
-
 module.exports = {
   createRecipe,
   getAllRecipes,
@@ -134,4 +166,5 @@ module.exports = {
   updateRecipe,
   deleteRecipe,
   getAllRecipesByUserId,
+  getRecipeByIngredients,
 };

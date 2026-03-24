@@ -2,16 +2,46 @@ const express = require("express");
 const router = express.Router();
 const recipeController = require("../controllers/recipe.controller.js");
 const { auth } = require("../middleware/auth.middleware.js");
+const validate = require("../middleware/validate.js");
+const {
+  createRecipeSchema,
+  updateRecipeSchema,
+  recipeIdSchema,
+  getRecipesByIngredientsSchema,
+} = require("../validations/recipe.validation.js");
 
 // Public routes (e.g., GET /api/recipes, GET /api/recipes/:id)
 router.get("/", recipeController.getAllRecipes);
-router.get("/:id", recipeController.getRecipeById);
-router.get("/author/:authorId", recipeController.getRecipesByAuthor);
-router.get("/user/:id", recipeController.getAllRecipesByUserId);
+router.get(
+  "/ingredients",
+  validate(getRecipesByIngredientsSchema),
+  recipeController.getRecipeByIngredients,
+);
+router.get("/:id", validate(recipeIdSchema), recipeController.getRecipeById);
+router.get(
+  "/user/:id",
+  validate(recipeIdSchema),
+  recipeController.getAllRecipesByUserId,
+);
 
-// Protected routes (require valid JWT) (e.g., POST /api/recipes, PUT /api/recipes/:id)
-router.post("/", auth, recipeController.createRecipe);
-router.put("/:id", auth, recipeController.updateRecipe);
-router.delete("/:id", auth, recipeController.deleteRecipe);
+// Protected routes (require valid JWT)
+router.post(
+  "/",
+  auth,
+  validate(createRecipeSchema),
+  recipeController.createRecipe,
+);
+router.put(
+  "/:id",
+  auth,
+  validate(updateRecipeSchema),
+  recipeController.updateRecipe,
+);
+router.delete(
+  "/:id",
+  auth,
+  validate(recipeIdSchema),
+  recipeController.deleteRecipe,
+);
 
 module.exports = router;

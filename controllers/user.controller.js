@@ -87,4 +87,18 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-module.exports = { getUser, updateUser, getAllUsers, deleteUser };
+const getMe = async (req, res, next) => {
+  try {
+    const foundUser = await user.findById(req.user._id, { password: 0 });
+    if (!foundUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, result: foundUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUser, updateUser, getAllUsers, deleteUser, getMe };

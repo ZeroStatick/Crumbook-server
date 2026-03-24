@@ -5,6 +5,13 @@ const errorHandler = (err, _req, res, _next) => {
   let status = err.statusCode ?? 500;
   let message = err.message ?? "Internal server error";
 
+  if (err.name === "ZodError") {
+    status = 400;
+    message = err.issues
+      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+      .join(", ");
+  }
+
   if (err.name === "ValidationError") {
     status = 400;
     message = Object.values(err.errors)
