@@ -66,8 +66,18 @@ const recipeIdSchema = z.object({
   }),
 });
 
+/**
+ * Zod schema for filtering recipes by ingredients.
+ */
+const getRecipesByIngredientsSchema = z.object({
+  query: z.object({
+    ingredients: z.string().min(1, "At least one ingredient ID is required"),
+  }),
+});
+
 module.exports = {
   createRecipeSchema,
   updateRecipeSchema,
   recipeIdSchema,
+  getRecipesByIngredientsSchema,
 };

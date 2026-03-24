@@ -7,10 +7,16 @@ const {
   createRecipeSchema,
   updateRecipeSchema,
   recipeIdSchema,
+  getRecipesByIngredientsSchema,
 } = require("../validations/recipe.validation.js");
 
 // Public routes
 router.get("/", recipeController.getAllRecipes);
+router.get(
+  "/ingredients",
+  validate(getRecipesByIngredientsSchema),
+  recipeController.getRecipeByIngredients,
+);
 router.get("/:id", validate(recipeIdSchema), recipeController.getRecipeById);
 router.get("/user/:id", validate(recipeIdSchema), recipeController.getAllRecipesByUserId);
 
