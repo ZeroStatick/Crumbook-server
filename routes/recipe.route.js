@@ -10,7 +10,7 @@ const {
   getRecipesByIngredientsSchema,
 } = require("../validations/recipe.validation.js");
 
-// Public routes
+// Public routes (e.g., GET /api/recipes, GET /api/recipes/:id)
 router.get("/", recipeController.getAllRecipes);
 router.get(
   "/ingredients",
@@ -18,7 +18,11 @@ router.get(
   recipeController.getRecipeByIngredients,
 );
 router.get("/:id", validate(recipeIdSchema), recipeController.getRecipeById);
-router.get("/user/:id", validate(recipeIdSchema), recipeController.getAllRecipesByUserId);
+router.get(
+  "/user/:id",
+  validate(recipeIdSchema),
+  recipeController.getAllRecipesByUserId,
+);
 
 // Protected routes (require valid JWT)
 router.post(
