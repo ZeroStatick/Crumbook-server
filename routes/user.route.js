@@ -3,8 +3,12 @@ const router = express.Router();
 const userController = require("../controllers/user.controller.js");
 const { auth } = require("../middleware/auth.middleware.js");
 const validate = require("../middleware/validate.js");
-const { updateUserSchema, userIdSchema } = require("../validations/user.validation.js");
+const {
+  updateUserSchema,
+  userIdSchema,
+} = require("../validations/user.validation.js");
 
+router.get("/me", auth, userController.getMe);
 router.get("/:id", auth, validate(userIdSchema), userController.getUser);
 router.put("/:id", auth, validate(updateUserSchema), userController.updateUser);
 router.get("/", auth, userController.getAllUsers);
