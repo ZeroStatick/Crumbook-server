@@ -28,8 +28,10 @@ const createRecipe = async (req, res, next) => {
 
 const getAllRecipes = async (req, res, next) => {
   try {
-    // Populate allows us to fetch the author's details (like name) instead of just their ID
-    const recipes = await Recipe.find().populate("author", "name email");
+    // Populate allows us to fetch the author's details and the ingredient details
+    const recipes = await Recipe.find()
+      .populate("author", "name email")
+      .populate("ingredients.item");
     res.status(200).json({ success: true, result: recipes });
   } catch (error) {
     next(error);
@@ -51,7 +53,9 @@ const getRecipeByIngredients = async (req, res, next) => {
     // Find recipes that contain ALL the provided ingredient IDs
     const recipes = await Recipe.find({
       "ingredients.item": { $all: ingredientIds },
-    }).populate("author", "name email");
+    })
+      .populate("author", "name email")
+      .populate("ingredients.item");
 
     res.status(200).json({ success: true, result: recipes });
   } catch (error) {
@@ -73,10 +77,9 @@ const getAllRecipesByUserId = async (req, res, next) => {
 
 const getRecipeById = async (req, res, next) => {
   try {
-    const recipe = await Recipe.findById(req.params.id).populate(
-      "author",
-      "name email",
-    );
+    const recipe = await Recipe.findById(req.params.id)
+      .populate("author", "name email")
+      .populate("ingredients.item");
     if (!recipe) {
       return res
         .status(404)
