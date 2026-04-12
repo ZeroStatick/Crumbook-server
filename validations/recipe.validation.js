@@ -51,6 +51,9 @@ const updateRecipeSchema = z.object({
     difficulty: z.string().optional(),
     tags: z.array(z.string()).optional(),
     public: z.boolean().optional(),
+    source: z.string().optional(),
+    original_recipe: z.string().optional(),
+    original_author: z.string().optional(),
   }).strict(),
   params: z.object({
     id: z.string().min(1, "Recipe ID is required"),

@@ -193,7 +193,7 @@ const updateRecipe = async (req, res, next) => {
 
     // Authorization: Ensure the user is the author or an admin/owner.
     const isAuthor = recipe.author.toString() === req.user._id.toString();
-    const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
+    const isAdminOrOwner = req.user.role >= 2; // Role 2 is admin, Role 3 is owner
 
     if (!isAuthor && !isAdminOrOwner) {
       return res.status(403).json({
