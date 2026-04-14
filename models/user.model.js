@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    favorites: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "recipe"
+    }],
   },
 
   { timestamps: true },
