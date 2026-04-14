@@ -9,6 +9,7 @@ const {
 } = require("../validations/user.validation.js");
 
 router.get("/me", auth, userController.getMe);
+router.post("/favorites", auth, userController.toggleFavorite);
 router.get("/:id", auth, validate(userIdSchema), userController.getUser);
 router.put("/:id", auth, validate(updateUserSchema), userController.updateUser);
 router.get("/", auth, userController.getAllUsers);

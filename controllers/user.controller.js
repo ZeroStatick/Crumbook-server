@@ -27,8 +27,8 @@ const updateUser = async (req, res, next) => {
       });
     }
 
-    // SECURITY: Prevent a non-admin user from changing their own role.
-    if (req.body.role !== undefined && !isAdminOrOwner) {
+    // SECURITY: Only an owner (role 3) can change user roles.
+    if (req.body.role !== undefined && req.user.role !== 3) {
       delete req.body.role;
     }
 
@@ -101,4 +101,31 @@ const getMe = async (req, res, next) => {
   }
 };
 
-module.exports = { getUser, updateUser, getAllUsers, deleteUser, getMe };
+const toggleFavorite = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { recipeId } = req.body;
+
+    const foundUser = await user.findById(userId);
+    if (!foundUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const isFavorite = foundUser.favorites.includes(recipeId);
+    
+    if (isFavorite) {
+      foundUser.favorites = foundUser.favorites.filter(id => id.toString() !== recipeId);
+    } else {
+      foundUser.favorites.push(recipeId);
+    }
+
+    await foundUser.save();
+    
+    const updatedUser = await user.findById(userId, { password: 0 });
+    res.status(200).json({ success: true, result: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUser, updateUser, getAllUsers, deleteUser, getMe, toggleFavorite };
