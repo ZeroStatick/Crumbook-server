@@ -9,6 +9,7 @@ const userRouter = require("./routes/user.route.js");
 const recipeRouter = require("./routes/recipe.route.js");
 const ingredientRouter = require("./routes/ingredient.route.js");
 const reportRouter = require("./routes/report.route.js");
+const commentRouter = require("./routes/comment.route.js");
 const connectDB = require("./config/connectDB.js");
 const { errorHandler } = require("./middleware/errorHandler.js");
 
@@ -21,6 +22,7 @@ app.use("/api/users", userRouter);
 app.use("/api/recipes", recipeRouter);
 app.use("/api/ingredients", ingredientRouter);
 app.use("/api/reports", reportRouter);
+app.use("/api/comments", commentRouter);
 
 //404 on routes
 app.use((_req, res) => {
