@@ -1,4 +1,5 @@
 const Report = require("../models/report.model.js");
+const Recipe = require("../models/recipe.model.js");
 
 const getAllReports = async (req, res, next) => {
   try {
@@ -17,6 +18,37 @@ const getAllReports = async (req, res, next) => {
 
 const createReport = async (req, res, next) => {
   try {
+    const recipe = await Recipe.findById(req.body.recipe_id);
+    if (!recipe) {
+      return res.status(404).json({ success: false, message: "Recipe not found" });
+    }
+
+    // 1. Prevent self-reporting
+    if (recipe.author.toString() === req.user._id.toString()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "You cannot report your own recipe" 
+      });
+    }
+
+    // 2. Prevent duplicate reports from the same user
+    const existingReport = await Report.findOne({
+      recipe_id: req.body.recipe_id,
+      user_id: req.user._id,
+    });
+
+    if (existingReport) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "You have already reported this recipe" 
+      });
+    }
+
+    // Flexible source check (allow null/undefined as Original)
+    if (recipe.source && recipe.source !== "Original") {
+      return res.status(400).json({ success: false, message: "Only user-generated recipes can be reported" });
+    }
+
     const newReport = await Report.create({
       ...req.body,
       user_id: req.user._id,
