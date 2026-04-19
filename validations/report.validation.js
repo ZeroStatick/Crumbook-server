@@ -1,23 +1,31 @@
 const { z } = require("zod");
 
 const reportSorts = [
-  "spam", // Commercial ads or repetitive content
-  "harassment", // Bullying or personal attacks in comments
-  "hate_speech", // Discriminatory content
-  "inappropriate_content", // Nudity or graphic violence
-  "copyright_infringement", // Stolen recipe or photo from another site
-  "dangerous_content", // Misleading health advice or toxic ingredients
-  "off_topic", // Not a recipe (e.g., a meme or personal photo)
-  "other", // Anything else (requires details),
+  "spam",
+  "harassment",
+  "hate_speech",
+  "inappropriate_content",
+  "copyright_infringement",
+  "dangerous_content",
+  "off_topic",
+  "other",
 ];
 
-const reportSchema = z.object({
+const createReportSchema = z.object({
   body: z.object({
     sort: z.enum(reportSorts),
     reason: z.string().min(1).max(500),
-    recipe_id: z.string().min(1),
-    user_id: z.string().min(1),
+    target_type: z.enum(["recipe", "comment"]),
+    recipe_id: z.string().optional(),
+    comment_id: z.string().optional(),
+  }).refine((data) => {
+    if (data.target_type === "recipe") return !!data.recipe_id;
+    if (data.target_type === "comment") return !!data.comment_id;
+    return false;
+  }, {
+    message: "Must provide recipe_id for recipe reports or comment_id for comment reports",
+    path: ["recipe_id", "comment_id"],
   }),
 });
 
-module.exports = reportSchema;
+module.exports = { createReportSchema };

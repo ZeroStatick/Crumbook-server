@@ -6,14 +6,14 @@ const reportSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
-        "spam", // Commercial ads or repetitive content
-        "harassment", // Bullying or personal attacks in comments
-        "hate_speech", // Discriminatory content
-        "inappropriate_content", // Nudity or graphic violence
-        "copyright_infringement", // Stolen recipe or photo from another site
-        "dangerous_content", // Misleading health advice or toxic ingredients
-        "off_topic", // Not a recipe (e.g., a meme or personal photo)
-        "other", // Anything else (requires details),
+        "spam",
+        "harassment",
+        "hate_speech",
+        "inappropriate_content",
+        "copyright_infringement",
+        "dangerous_content",
+        "off_topic",
+        "other",
       ],
     },
     reason: {
@@ -21,14 +21,24 @@ const reportSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, "Reason cannot be more than 500 characters"],
     },
+    target_type: {
+      type: String,
+      required: true,
+      enum: ["recipe", "comment"],
+    },
     recipe_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recipe",
-      required: true,
+      required: function() { return this.target_type === "recipe"; }
+    },
+    comment_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      required: function() { return this.target_type === "comment"; }
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user", // Matching your "user" model name
       required: true,
     },
   },
