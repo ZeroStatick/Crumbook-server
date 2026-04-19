@@ -14,9 +14,8 @@ const reportSorts = [
 const reportSchema = z.object({
   body: z.object({
     sort: z.enum(reportSorts),
-    reason: z.string().min(1).max(500),
-    recipe_id: z.string().min(1),
-    user_id: z.string().min(1),
+    reason: z.string().max(500).optional().or(z.literal("")),
+    recipe_id: z.string(),
   }),
 });
 
