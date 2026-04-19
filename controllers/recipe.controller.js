@@ -1,5 +1,6 @@
 const Recipe = require("../models/recipe.model.js");
 const Ingredient = require("../models/ingredient.model.js");
+const Report = require("../models/report.model.js");
 const spoonacularService = require("../services/spoonacular.service.js");
 const {
   SPNCLR_URL_BY_INGR,
@@ -245,9 +246,12 @@ const deleteRecipe = async (req, res, next) => {
     }
 
     await recipe.deleteOne();
+    // Also delete all reports associated with this recipe
+    await Report.deleteMany({ recipe_id: req.params.id });
+
     res.status(200).json({
       success: true,
-      result: { message: "Recipe deleted successfully" },
+      result: { message: "Recipe and associated reports deleted successfully" },
     });
   } catch (error) {
     next(error);

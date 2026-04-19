@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const ingredientController = require("../controllers/ingredient.controller.js");
-const { moderatorAndOwnerAuth } = require("../middleware/auth.middleware.js");
+const { auth, moderatorAndOwnerAuth } = require("../middleware/auth.middleware.js");
 const validate = require("../middleware/validate.js");
 const {
   createIngredientSchema,
@@ -14,6 +14,8 @@ router.get("/", ingredientController.getAllIngredients);
 router.get("/:id", validate(ingredientIdSchema), ingredientController.getIngredientById);
 
 // Protected routes (require valid JWT)
+router.use(auth);
+
 router.post(
   "/",
   moderatorAndOwnerAuth,

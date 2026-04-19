@@ -23,18 +23,18 @@ const reportSchema = new mongoose.Schema(
     },
     recipe_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Recipe",
+      ref: "recipe",
       required: true,
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
     },
   },
   { timestamps: true },
 );
 
-const Report = mongoose.model("Report", reportSchema);
+const Report = mongoose.model("report", reportSchema);
 
 module.exports = Report;
