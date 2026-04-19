@@ -29,12 +29,16 @@ const reportSchema = new mongoose.Schema(
     recipe_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recipe",
-      required: function() { return this.target_type === "recipe"; }
+      required: function () {
+        return this.target_type === "recipe";
+      },
     },
     comment_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
-      required: function() { return this.target_type === "comment"; }
+      required: function () {
+        return this.target_type === "comment";
+      },
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +49,6 @@ const reportSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const Report = mongoose.model("Report", reportSchema);
+const Report = mongoose.model("report", reportSchema);
 
 module.exports = Report;
