@@ -8,7 +8,10 @@ const getAllReports = async (req, res, next) => {
       .populate("recipe_id", "title")
       .populate({
         path: "comment_id",
-        populate: { path: "comment_author", select: "name" },
+        populate: [
+          { path: "comment_author", select: "name" },
+          { path: "commented_recipe", select: "title" }
+        ],
       })
       .populate("user_id", "name email");
     res.status(200).json({ success: true, result: reports });
@@ -38,15 +41,7 @@ const createReport = async (req, res, next) => {
       if (existingReport) {
         return res.status(400).json({ success: false, message: "You have already reported this recipe" });
       }
-
-      // Only user-generated recipes can be reported (check if source matches your logic)
-      if (recipe.source !== "Original" && recipe.source !== "User") {
-         // Logic adjustment: If source is Spoonacular/External, maybe we shouldn't report it here?
-         // Keeping it flexible based on your existing code's intent.
-      }
-    } 
-    
-    else if (target_type === "comment") {
+    } else if (target_type === "comment") {
       const comment = await Comment.findById(comment_id);
       if (!comment) {
         return res.status(404).json({ success: false, message: "Comment not found" });
@@ -64,10 +59,17 @@ const createReport = async (req, res, next) => {
       }
     }
 
-    const newReport = await Report.create({
-      ...req.body,
+    const reportData = {
+      sort: req.body.sort,
+      reason: req.body.reason,
+      target_type,
       user_id: req.user._id,
-    });
+    };
+
+    if (target_type === "recipe") reportData.recipe_id = recipe_id;
+    if (target_type === "comment") reportData.comment_id = comment_id;
+
+    const newReport = await Report.create(reportData);
     
     res.status(201).json({ success: true, result: newReport });
   } catch (e) {

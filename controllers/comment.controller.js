@@ -11,6 +11,14 @@ const createComment = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Recipe not found" });
     }
 
+    // Prevent commenting on own recipe
+    if (recipe.author.toString() === comment_author.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot comment on your own recipe",
+      });
+    }
+
     const newComment = new Comment({
       text,
       rating,
