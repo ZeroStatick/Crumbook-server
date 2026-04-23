@@ -2,6 +2,7 @@ const Recipe = require("../models/recipe.model.js");
 const Ingredient = require("../models/ingredient.model.js");
 const Report = require("../models/report.model.js");
 const spoonacularService = require("../services/spoonacular.service.js");
+const jwt = require("jsonwebtoken");
 const {
   SPNCLR_URL_BY_INGR,
   SPNCLR_URL_INFORMATION,
@@ -35,8 +36,33 @@ const createRecipe = async (req, res, next) => {
 
 const getAllRecipes = async (req, res, next) => {
   try {
+    // Manual check for token since we aren't using optionalAuth middleware
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    let userRole = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded._id;
+        userRole = decoded.role;
+      } catch (e) {
+        // Invalid token? Just treat as guest (public only)
+      }
+    }
+
+    // Guests see public only.
+    // Owners (role 3) see everything.
+    // Others see public OR their own recipes.
+    const query = userId 
+      ? (userRole === 3 
+          ? {} // Owners see everything
+          : { $or: [{ public: true }, { author: userId }] }
+        )
+      : { public: true };
+
     // Populate allows us to fetch the author's details and the ingredient details
-    const recipes = await Recipe.find()
+    const recipes = await Recipe.find(query)
       .populate("author", "name email")
       .populate("ingredients.item");
     res.status(200).json({ success: true, result: recipes });
@@ -55,15 +81,37 @@ const getRecipeByIngredients = async (req, res, next) => {
         .json({ success: false, message: "No ingredients provided" });
     }
 
+    // Manual check for token
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    let userRole = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded._id;
+        userRole = decoded.role;
+      } catch (e) {
+        // Ignore
+      }
+    }
+
     const ingredientIds = ingredients.split(",");
 
     // 1. Fetch the names of these ingredients from our DB (needed for Spoonacular)
     const ingredientDocs = await Ingredient.find({ _id: { $in: ingredientIds } });
     const ingredientNames = ingredientDocs.map((doc) => doc.name);
 
-    // 2. Search local database for recipes containing ALL these ingredient IDs
+    // 2. Search local database for recipes containing ALL these ingredient IDs + Visibility check
+    const visibilityQuery = userId 
+      ? (userRole === 3 ? {} : { $or: [{ public: true }, { author: userId }] })
+      : { public: true };
+
     const localRecipesRaw = await Recipe.find({
-      "ingredients.item": { $all: ingredientIds },
+      $and: [
+        { "ingredients.item": { $all: ingredientIds } },
+        visibilityQuery
+      ]
     })
       .populate("author", "name email")
       .populate("ingredients.item");
@@ -177,6 +225,33 @@ const getRecipeById = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Recipe not found" });
     }
+
+    // Privacy check for internal recipes
+    if (!recipe.public) {
+      // Check for token
+      const authHeader = req.headers.authorization;
+      let userId = null;
+      let userRole = null;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const token = authHeader.slice(7);
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          userId = decoded._id;
+          userRole = decoded.role;
+        } catch (e) { /* Ignore */ }
+      }
+
+      const isAuthor = userId && recipe.author._id.toString() === userId.toString();
+      const isOwner = userRole === 3;
+
+      if (!isAuthor && !isOwner) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: This recipe is private.",
+        });
+      }
+    }
+
     res.status(200).json({ success: true, result: recipe });
   } catch (error) {
     next(error);
