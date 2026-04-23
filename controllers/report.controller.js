@@ -1,5 +1,6 @@
 const Report = require("../models/report.model.js");
 const Recipe = require("../models/recipe.model.js");
+const Comment = require("../models/comment.model.js");
 
 const getAllReports = async (req, res, next) => {
   try {
@@ -18,48 +19,56 @@ const getAllReports = async (req, res, next) => {
 
 const createReport = async (req, res, next) => {
   try {
-    const recipe = await Recipe.findById(req.body.recipe_id);
-    if (!recipe) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Recipe not found" });
-    }
+    const { target_type, recipe_id, comment_id } = req.body;
+    const current_user_id = req.user._id.toString();
 
-    // 1. Prevent self-reporting
-    if (recipe.author.toString() === req.user._id.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot report your own recipe",
-      });
-    }
+    if (target_type === "recipe") {
+      const recipe = await Recipe.findById(recipe_id);
+      if (!recipe) {
+        return res.status(404).json({ success: false, message: "Recipe not found" });
+      }
 
-    // 2. Prevent duplicate reports from the same user
-    const existingReport = await Report.findOne({
-      recipe_id: req.body.recipe_id,
-      user_id: req.user._id,
-    });
+      // Prevent self-reporting
+      if (recipe.author.toString() === current_user_id) {
+        return res.status(400).json({ success: false, message: "You cannot report your own recipe" });
+      }
 
-    if (existingReport) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already reported this recipe",
-      });
-    }
+      // Prevent duplicate reports
+      const existingReport = await Report.findOne({ recipe_id, user_id: current_user_id });
+      if (existingReport) {
+        return res.status(400).json({ success: false, message: "You have already reported this recipe" });
+      }
 
-    // Flexible source check (allow null/undefined as Original)
-    if (recipe.source && recipe.source !== "Original") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Only user-generated recipes can be reported",
-        });
+      // Only user-generated recipes can be reported (check if source matches your logic)
+      if (recipe.source !== "Original" && recipe.source !== "User") {
+         // Logic adjustment: If source is Spoonacular/External, maybe we shouldn't report it here?
+         // Keeping it flexible based on your existing code's intent.
+      }
+    } 
+    
+    else if (target_type === "comment") {
+      const comment = await Comment.findById(comment_id);
+      if (!comment) {
+        return res.status(404).json({ success: false, message: "Comment not found" });
+      }
+
+      // Prevent self-reporting
+      if (comment.comment_author.toString() === current_user_id) {
+        return res.status(400).json({ success: false, message: "You cannot report your own comment" });
+      }
+
+      // Prevent duplicate reports
+      const existingReport = await Report.findOne({ comment_id, user_id: current_user_id });
+      if (existingReport) {
+        return res.status(400).json({ success: false, message: "You have already reported this comment" });
+      }
     }
 
     const newReport = await Report.create({
       ...req.body,
       user_id: req.user._id,
     });
+    
     res.status(201).json({ success: true, result: newReport });
   } catch (e) {
     next(e);
@@ -70,9 +79,7 @@ const deleteReport = async (req, res, next) => {
   try {
     const deletedReport = await Report.findByIdAndDelete(req.params.id);
     if (!deletedReport) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Report not found" });
+      return res.status(404).json({ success: false, message: "Report not found" });
     }
     res.status(200).json({ success: true, result: deletedReport });
   } catch (e) {

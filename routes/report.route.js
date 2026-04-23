@@ -15,7 +15,7 @@ router.use(auth);
 router.get("/", moderatorAndOwnerAuth, reportController.getAllReports);
 
 // Any authenticated user can create a report
-router.post("/", validate(reportSchema), reportController.createReport);
+router.post("/", validate(createReportSchema), reportController.createReport);
 
 // Only moderators and owners can delete reports
 router.delete("/:id", moderatorAndOwnerAuth, reportController.deleteReport);
