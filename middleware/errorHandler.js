@@ -2,8 +2,8 @@
  * Central error handler. Sends consistent JSON: { success: false, message }.
  */
 const errorHandler = (err, _req, res, _next) => {
-  let status = err.statusCode ?? 500;
-  let message = err.message ?? "Internal server error";
+  let status = err.statusCode || err.status || 500;
+  let message = err.message || "Internal server error";
 
   if (err.name === "ZodError") {
     status = 400;
