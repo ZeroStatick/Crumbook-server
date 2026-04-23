@@ -62,18 +62,18 @@ const recipeSchema = new mongoose.Schema(
     tags: [String],
     author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     original_author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
       immutable: true,
     },
     original_recipe: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "recipe",
+      ref: "Recipe",
       required: true,
       immutable: true,
     },
@@ -86,6 +86,6 @@ const recipeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const Recipe = mongoose.model("recipe", recipeSchema);
+const Recipe = mongoose.model("Recipe", recipeSchema);
 
 module.exports = Recipe;
