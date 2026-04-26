@@ -8,7 +8,7 @@ const updateUserSchema = z.object({
   body: z.object({
     name: z.string().min(2, "Name must be at least 2 characters long").optional(),
     email: z.string().email("Invalid email address").optional(),
-    profile_picture: z.string().optional(),
+    profile_picture: z.string().optional().or(z.literal("")),
     role: z.number().min(1).max(3).optional(),
   }).strict(),
   params: z.object({
