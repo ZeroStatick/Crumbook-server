@@ -29,22 +29,26 @@ const reportSchema = new mongoose.Schema(
     recipe_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recipe",
-      required: function() { return this.target_type === "recipe"; }
+      required: function () {
+        return this.target_type === "recipe";
+      },
     },
     comment_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
-      required: function() { return this.target_type === "comment"; }
+      required: function () {
+        return this.target_type === "comment";
+      },
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user", // Matching your "user" model name
+      ref: "User",
       required: true,
     },
   },
   { timestamps: true },
 );
 
-const Report = mongoose.model("report", reportSchema);
+const Report = mongoose.model("Report", reportSchema);
 
 module.exports = Report;

@@ -6,7 +6,7 @@ const commentSchema = new mongoose.Schema(
   {
     comment_author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     text: {
@@ -26,7 +26,7 @@ const commentSchema = new mongoose.Schema(
     },
     commented_recipe_author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
   },

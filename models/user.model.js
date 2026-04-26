@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
     },
     favorites: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: "recipe"
+      ref: "Recipe"
     }],
   },
 
@@ -44,6 +44,6 @@ userSchema.pre("save", async function () {
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
 });
-const userModel = mongoose.model("user", userSchema);
+const userModel = mongoose.model("User", userSchema);
 
 module.exports = userModel;
