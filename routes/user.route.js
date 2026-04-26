@@ -8,12 +8,14 @@ const {
   userIdSchema,
 } = require("../validations/user.validation.js");
 
-// All user routes require authentication
+// Public route to view user profiles
+router.get("/:id", validate(userIdSchema), userController.getUser);
+
+// All subsequent user routes require authentication
 router.use(auth);
 
 router.get("/me", userController.getMe);
 router.post("/favorites", userController.toggleFavorite);
-router.get("/:id", validate(userIdSchema), userController.getUser);
 router.put("/:id", validate(updateUserSchema), userController.updateUser);
 router.get("/", moderatorAndOwnerAuth, userController.getAllUsers);
 router.delete("/:id", validate(userIdSchema), userController.deleteUser);
