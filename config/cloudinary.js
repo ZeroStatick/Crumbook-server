@@ -1,8 +1,8 @@
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 const CloudinaryStorage = require("multer-storage-cloudinary");
 const multer = require("multer");
 
-cloudinary.v2.config(); // Automatically uses CLOUDINARY_URL from process.env
+cloudinary.config(); // Automatically uses CLOUDINARY_URL from process.env
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
