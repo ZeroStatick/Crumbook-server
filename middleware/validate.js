@@ -6,6 +6,7 @@ const { z } = require("zod");
  */
 const validate = (schema) => (req, res, next) => {
   try {
+    console.log("Validating Request Body:", req.body);
     // .parse() will throw an error if validation fails
     schema.parse({
       body: req.body,
