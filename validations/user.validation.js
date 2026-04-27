@@ -10,6 +10,8 @@ const updateUserSchema = z.object({
     email: z.string().email("Invalid email address").optional(),
     profile_picture: z.string().optional().or(z.literal("")),
     role: z.number().min(1).max(3).optional(),
+    password: z.string().min(6, "Password must be at least 6 characters long").optional(),
+    currentPassword: z.string().optional(),
   }).strict(),
   params: z.object({
     id: z.string().min(1, "User ID is required"),

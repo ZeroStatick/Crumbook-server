@@ -1,4 +1,5 @@
 const user = require("../models/user.model.js");
+const bcrypt = require("bcrypt");
 
 const getUser = async (req, res, next) => {
   try {
@@ -16,48 +17,60 @@ const getUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    console.log("Update User Request - Body:", req.body);
-    console.log("Update User Request - File:", req.file);
     const isSelf = req.user._id.toString() === req.params.id;
-    const isAdminOrOwner = req.user.role > 1; // Roles 2 (admin) and 3 (owner)
+    const isAdminOrOwner = req.user.role > 1;
 
     if (!isSelf && !isAdminOrOwner) {
       return res.status(403).json({
         success: false,
-        message:
-          "Forbidden: You can only update your own profile or you must be an admin.",
+        message: "Forbidden: You can only update your own profile or you must be an admin.",
       });
     }
 
-    // SECURITY: Only an owner (role 3) can change user roles.
-    if (req.body.role !== undefined && req.user.role !== 3) {
-      delete req.body.role;
+    const foundUser = await user.findById(req.params.id).select("+password");
+    if (!foundUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Handle Password Change
+    if (req.body.password) {
+      if (!isSelf) {
+        return res.status(403).json({ success: false, message: "Only the user can change their own password." });
+      }
+      if (!req.body.currentPassword) {
+        return res.status(400).json({ success: false, message: "Current password is required to set a new password." });
+      }
+      const isMatch = await bcrypt.compare(req.body.currentPassword, foundUser.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: "Incorrect current password." });
+      }
+      foundUser.password = req.body.password;
+    }
+
+    // Update other fields
+    if (req.body.name) foundUser.name = req.body.name;
+    if (req.body.email) foundUser.email = req.body.email;
+    
+    // Role update - Only owner (role 3) can change roles
+    if (req.body.role !== undefined && req.user.role === 3) {
+      foundUser.role = req.body.role;
     }
 
     if (req.file) {
-      // Robustly handle different properties where the URL might be stored
-      req.body.profile_picture = req.file.path || req.file.url || req.file.secure_url;
+      foundUser.profile_picture = req.file.path || req.file.url || req.file.secure_url;
     } else if (req.body.profile_picture === "") {
-      // If the user didn't upload a new file and the client sent an empty string,
-      // it might mean they want to remove the picture, but usually we want to keep it
-      // unless specifically asked. Let's only remove it if it's explicitly set to null/empty
-      // but if it's already empty, we can just delete it from req.body to avoid overwriting with empty
-      delete req.body.profile_picture;
+      // Keep existing if not explicitly null or handled differently
+    } else if (req.body.profile_picture) {
+        foundUser.profile_picture = req.body.profile_picture;
     }
 
-    const updatedUser = await user
-      .findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-        context: "query",
-      })
-      .select("-password");
-    if (!updatedUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-    res.status(200).json({ success: true, result: updatedUser });
+    await foundUser.save();
+    
+    // Return user without password
+    const result = foundUser.toObject();
+    delete result.password;
+
+    res.status(200).json({ success: true, result });
   } catch (error) {
     next(error);
   }
