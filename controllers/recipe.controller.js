@@ -12,6 +12,11 @@ const createRecipe = async (req, res, next) => {
   try {
     const recipeData = { ...req.body };
 
+    // If an image was uploaded via Cloudinary/multer
+    if (req.file) {
+      recipeData.image = req.file.path || req.file.url || req.file.secure_url;
+    }
+
     // Attach the currently logged-in user's ID as the author
     recipeData.author = req.user._id;
 
@@ -279,14 +284,21 @@ const updateRecipe = async (req, res, next) => {
       });
     }
 
+    const recipeData = { ...req.body };
+
+    // Handle Image Upload
+    if (req.file) {
+      recipeData.image = req.file.path || req.file.url || req.file.secure_url;
+    }
+
     // SECURITY: Prevent the author field from being changed on update.
-    if (req.body.author) {
-      delete req.body.author;
+    if (recipeData.author) {
+      delete recipeData.author;
     }
 
     const updatedRecipe = await Recipe.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      recipeData,
       {
         new: true,
         runValidators: true,

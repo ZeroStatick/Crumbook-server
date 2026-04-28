@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const recipeController = require("../controllers/recipe.controller.js");
+const upload = require("../config/cloudinary.js");
+const { parseRecipeData } = require("../middleware/formDataParser.js");
 const { auth } = require("../middleware/auth.middleware.js");
 const validate = require("../middleware/validate.js");
 const {
@@ -28,12 +30,16 @@ router.get(
 router.post(
   "/",
   auth,
+  upload.single("image"),
+  parseRecipeData,
   validate(createRecipeSchema),
   recipeController.createRecipe,
 );
 router.put(
   "/:id",
   auth,
+  upload.single("image"),
+  parseRecipeData,
   validate(updateRecipeSchema),
   recipeController.updateRecipe,
 );

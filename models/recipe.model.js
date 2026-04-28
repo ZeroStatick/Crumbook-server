@@ -55,6 +55,11 @@ const recipeSchema = new mongoose.Schema(
     image: {
       type: String, // URL to the image
     },
+    imageSource: {
+      type: String,
+      enum: ["user", "ai", "external"],
+      default: "user",
+    },
     prepTime: Number, // Time in minutes
     cookTime: Number, // Time in minutes
     servings: Number,

@@ -11,8 +11,10 @@ cloudinary.config({
 
 const storage = CloudinaryStorage({
   cloudinary: cloudinary,
-  folder: "crumbook_profiles",
-  allowedFormats: ["jpg", "png", "jpeg", "webp"],
+  params: {
+    folder: "crumbook",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+  },
 });
 
 const upload = multer({ storage: storage });
