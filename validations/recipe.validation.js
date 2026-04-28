@@ -74,7 +74,13 @@ const recipeIdSchema = z.object({
  */
 const getRecipesByIngredientsSchema = z.object({
   query: z.object({
-    ingredients: z.string().min(1, "At least one ingredient ID is required"),
+    ingredients: z
+      .string()
+      .min(1, "At least one ingredient ID is required")
+      .refine(
+        (val) => val.split(",").every((id) => /^[0-9a-fA-F]{24}$/.test(id.trim())),
+        { message: "Invalid Ingredient ID format detected in list" }
+      ),
   }),
 });
 

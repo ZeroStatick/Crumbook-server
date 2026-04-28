@@ -27,7 +27,17 @@ const userIdSchema = z.object({
   }),
 });
 
+/**
+ * Zod schema for toggling a favorite recipe.
+ */
+const toggleFavoriteSchema = z.object({
+  body: z.object({
+    recipeId: z.string().min(1, "Recipe ID is required"),
+  }).strict(),
+});
+
 module.exports = {
   updateUserSchema,
   userIdSchema,
+  toggleFavoriteSchema,
 };

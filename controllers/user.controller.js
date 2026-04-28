@@ -49,7 +49,7 @@ const updateUser = async (req, res, next) => {
 
     // Update other fields
     if (req.body.name) foundUser.name = req.body.name;
-    if (req.body.email) foundUser.email = req.body.email;
+    if (req.body.email) foundUser.email = req.body.email.toLowerCase();
     
     // Role update - Only owner (role 3) can change roles
     if (req.body.role !== undefined && req.user.role === 3) {
@@ -59,9 +59,9 @@ const updateUser = async (req, res, next) => {
     if (req.file) {
       foundUser.profile_picture = req.file.path || req.file.url || req.file.secure_url;
     } else if (req.body.profile_picture === "") {
-      // Keep existing if not explicitly null or handled differently
+      foundUser.profile_picture = null; // Explicitly allow removal to show default avatar
     } else if (req.body.profile_picture) {
-        foundUser.profile_picture = req.body.profile_picture;
+      foundUser.profile_picture = req.body.profile_picture;
     }
 
     await foundUser.save();

@@ -7,12 +7,18 @@ const { z } = require("zod");
 const validate = (schema) => (req, res, next) => {
   try {
     console.log("Validating Request Body:", req.body);
-    // .parse() will throw an error if validation fails
-    schema.parse({
+    // .parse() returns the transformed data
+    const parsedData = schema.parse({
       body: req.body,
       query: req.query,
       params: req.params,
     });
+
+    // Reassign cleaned data to req to preserve transformations (trim, defaults, etc.)
+    req.body = parsedData.body;
+    req.query = parsedData.query;
+    req.params = parsedData.params;
+
     next();
   } catch (error) {
     // If it's a Zod error, it will be caught by our errorHandler

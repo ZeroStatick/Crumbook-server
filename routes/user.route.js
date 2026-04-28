@@ -7,13 +7,18 @@ const validate = require("../middleware/validate.js");
 const {
   updateUserSchema,
   userIdSchema,
+  toggleFavoriteSchema,
 } = require("../validations/user.validation.js");
 
 // All user routes require authentication
 router.use(auth);
 
 router.get("/me", userController.getMe);
-router.post("/favorites", userController.toggleFavorite);
+router.post(
+  "/favorites",
+  validate(toggleFavoriteSchema),
+  userController.toggleFavorite
+);
 router.get("/:id", validate(userIdSchema), userController.getUser);
 router.put(
   "/:id",
