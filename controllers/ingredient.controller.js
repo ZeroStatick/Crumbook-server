@@ -1,25 +1,19 @@
 const Ingredient = require("../models/ingredient.model.js");
 
-const addIngredient = async (req, res) => {
+const addIngredient = async (req, res, next) => {
   try {
     const newIngredient = await Ingredient.create(req.body);
 
     res.status(201).json({
       success: true,
-      data: newIngredient,
+      result: newIngredient,
     });
   } catch (e) {
-    if (e.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "This ingredient already exists in the database.",
-      });
-    }
-    res.status(500).json({ success: false, message: e.message });
+    next(e);
   }
 };
 
-const getAllIngredients = async (req, res) => {
+const getAllIngredients = async (req, res, next) => {
   try {
     const { category } = req.query;
     let filter = {};
@@ -33,14 +27,14 @@ const getAllIngredients = async (req, res) => {
     res.status(200).json({
       success: true,
       count: ingredients.length,
-      data: ingredients,
+      result: ingredients,
     });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    next(e);
   }
 };
 
-const getIngredientById = async (req, res) => {
+const getIngredientById = async (req, res, next) => {
   try {
     const ingredient = await Ingredient.findById(req.params.id);
 
@@ -51,13 +45,13 @@ const getIngredientById = async (req, res) => {
       });
     }
 
-    res.status(200).json({ success: true, data: ingredient });
+    res.status(200).json({ success: true, result: ingredient });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    next(e);
   }
 };
 
-const updateIngredient = async (req, res) => {
+const updateIngredient = async (req, res, next) => {
   try {
     const updatedIngredient = await Ingredient.findByIdAndUpdate(
       req.params.id,
@@ -71,13 +65,13 @@ const updateIngredient = async (req, res) => {
         .json({ success: false, message: "Ingredient not found" });
     }
 
-    res.status(200).json({ success: true, data: updatedIngredient });
+    res.status(200).json({ success: true, result: updatedIngredient });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    next(e);
   }
 };
 
-const deleteIngredient = async (req, res) => {
+const deleteIngredient = async (req, res, next) => {
   try {
     const ingredient = await Ingredient.findByIdAndDelete(req.params.id);
 
@@ -89,9 +83,9 @@ const deleteIngredient = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: "Ingredient deleted successfully" });
+      .json({ success: true, result: { message: "Ingredient deleted successfully" } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    next(e);
   }
 };
 
