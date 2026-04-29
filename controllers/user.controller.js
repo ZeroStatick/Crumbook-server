@@ -3,7 +3,12 @@ const bcrypt = require("bcrypt");
 
 const getUser = async (req, res, next) => {
   try {
-    const foundUser = await user.findById(req.params.id, { password: 0 });
+    // SECURITY: Only project safe, public fields to prevent leaking emails or roles.
+    const foundUser = await user.findById(req.params.id, { 
+      name: 1, 
+      profile_picture: 1, 
+      createdAt: 1 
+    });
     if (!foundUser) {
       return res
         .status(404)
