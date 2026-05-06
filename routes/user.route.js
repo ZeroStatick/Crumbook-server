@@ -22,13 +22,12 @@ router.get("/:id", validate(userIdSchema), userController.getUser);
 // All subsequent user routes require authentication
 router.use(auth);
 
-// router.get("/me", userController.getMe);
 router.post(
   "/favorites",
   validate(toggleFavoriteSchema),
   userController.toggleFavorite,
 );
-// router.get("/:id", validate(userIdSchema), userController.getUser);
+
 router.put(
   "/:id",
   upload.single("profile_picture"),
