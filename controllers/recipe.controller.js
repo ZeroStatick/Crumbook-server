@@ -1,8 +1,11 @@
 const Recipe = require("../models/recipe.model.js");
 const Ingredient = require("../models/ingredient.model.js");
 const Report = require("../models/report.model.js");
+const Comment = require("../models/comment.model.js");
+const mongoose = require("mongoose");
 const spoonacularService = require("../services/spoonacular.service.js");
 const jwt = require("jsonwebtoken");
+const sanitizeHtml = require("sanitize-html");
 const {
   SPNCLR_URL_BY_INGR,
   SPNCLR_URL_INFORMATION,
@@ -10,11 +13,21 @@ const {
 
 const createRecipe = async (req, res, next) => {
   try {
-    const recipeData = { ...req.body };
+    const { image: bodyImage, ...recipeData } = req.body;
 
-    // If an image was uploaded via Cloudinary/multer
+    // Sanitize basic text fields
+    if (recipeData.title) {
+      recipeData.title = sanitizeHtml(String(recipeData.title), { allowedTags: [], allowedAttributes: {} });
+    }
+    if (recipeData.description) {
+      recipeData.description = sanitizeHtml(String(recipeData.description), { allowedTags: [], allowedAttributes: {} });
+    }
+
+    // Handle Image Upload or provided URL
     if (req.file) {
       recipeData.image = req.file.path || req.file.url || req.file.secure_url;
+    } else if (bodyImage && /^https?:\/\//i.test(bodyImage)) {
+      recipeData.image = bodyImage;
     }
 
     // Attach the currently logged-in user's ID as the author
@@ -199,7 +212,7 @@ const getRecipeById = async (req, res, next) => {
         _id: id,
         title: rawRecipe.title,
         // Spoonacular summary often contains HTML tags
-        description: rawRecipe.summary ? rawRecipe.summary.replace(/<[^>]*>?/gm, "") : "",
+        description: rawRecipe.summary ? sanitizeHtml(String(rawRecipe.summary), { allowedTags: [], allowedAttributes: {} }) : "",
         image: rawRecipe.image,
         prepTime: rawRecipe.readyInMinutes,
         cookTime: 0,
@@ -284,11 +297,23 @@ const updateRecipe = async (req, res, next) => {
       });
     }
 
-    const recipeData = { ...req.body };
+    const { image: bodyImage, ...recipeData } = req.body;
 
-    // Handle Image Upload
+    // Sanitize basic text fields
+    if (recipeData.title) {
+      recipeData.title = sanitizeHtml(String(recipeData.title), { allowedTags: [], allowedAttributes: {} });
+    }
+    if (recipeData.description) {
+      recipeData.description = sanitizeHtml(String(recipeData.description), { allowedTags: [], allowedAttributes: {} });
+    }
+
+    // Handle Image Upload or provided URL
     if (req.file) {
       recipeData.image = req.file.path || req.file.url || req.file.secure_url;
+    } else if (bodyImage && /^https?:\/\//i.test(bodyImage)) {
+      recipeData.image = bodyImage;
+    } else if (bodyImage === "") {
+      recipeData.image = ""; // Allow explicit removal if needed, though model might have defaults
     }
 
     // SECURITY: Prevent the author field from being changed on update.
@@ -312,9 +337,13 @@ const updateRecipe = async (req, res, next) => {
 };
 
 const deleteRecipe = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const recipe = await Recipe.findById(req.params.id);
+    const recipe = await Recipe.findById(req.params.id).session(session);
     if (!recipe) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(404)
         .json({ success: false, message: "Recipe not found" });
@@ -325,6 +354,8 @@ const deleteRecipe = async (req, res, next) => {
     const isAdminOrOwner = req.user.role > 1;
 
     if (!isAuthor && !isAdminOrOwner) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(403).json({
         success: false,
         message:
@@ -332,15 +363,31 @@ const deleteRecipe = async (req, res, next) => {
       });
     }
 
-    await recipe.deleteOne();
-    // Also delete all reports associated with this recipe
-    await Report.deleteMany({ recipe_id: req.params.id });
+    await recipe.deleteOne({ session });
+    
+    // Recursive deletion: Purge associated comments and their reports
+    const comments = await Comment.find({ commented_recipe: req.params.id }).select("_id").session(session);
+    const commentIds = comments.map(c => c._id);
+    
+    await Comment.deleteMany({ commented_recipe: req.params.id }).session(session);
+    
+    await Report.deleteMany({ 
+      $or: [
+        { recipe_id: req.params.id },
+        { comment_id: { $in: commentIds } }
+      ]
+    }).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
-      result: { message: "Recipe and associated reports deleted successfully" },
+      result: { message: "Recipe and associated content purged successfully" },
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
