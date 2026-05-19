@@ -24,7 +24,7 @@ const reportSchema = new mongoose.Schema(
     target_type: {
       type: String,
       required: true,
-      enum: ["recipe", "comment"],
+      enum: ["recipe", "comment", "guide", "guide_comment"],
     },
     recipe_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -38,6 +38,20 @@ const reportSchema = new mongoose.Schema(
       ref: "Comment",
       required: function () {
         return this.target_type === "comment";
+      },
+    },
+    guide_comment_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GuideComment",
+      required: function () {
+        return this.target_type === "guide_comment";
+      },
+    },
+    guide_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guide",
+      required: function () {
+        return this.target_type === "guide";
       },
     },
     user_id: {

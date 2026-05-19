@@ -64,11 +64,12 @@ const recipeSchema = new mongoose.Schema(
     cookTime: Number, // Time in minutes
     servings: Number,
     difficulty: String,
-    tags: [String],
+    tags: { type: [String], index: true },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     original_author: {
       type: mongoose.Schema.Types.ObjectId,
@@ -81,6 +82,7 @@ const recipeSchema = new mongoose.Schema(
       ref: "Recipe",
       required: true,
       immutable: true,
+      index: true,
     },
     source: { type: String, required: true },
     public: {

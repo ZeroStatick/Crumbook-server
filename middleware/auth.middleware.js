@@ -11,7 +11,7 @@ const auth = (req, res, next) => {
   const token = authHeader.slice(7);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { _id: decoded._id, role: decoded.role };
+    req.user = { _id: decoded._id, role: decoded.role, name: decoded.name };
     next();
   } catch {
     return res

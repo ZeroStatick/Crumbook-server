@@ -1,5 +1,7 @@
 const Comment = require("../models/comment.model.js");
 const Recipe = require("../models/recipe.model.js");
+const Report = require("../models/report.model.js");
+const sanitizeHtml = require("sanitize-html");
 
 const createComment = async (req, res, next) => {
   try {
@@ -19,8 +21,13 @@ const createComment = async (req, res, next) => {
       });
     }
 
+    const sanitizedText = sanitizeHtml(String(text), {
+      allowedTags: [], // Strip all HTML tags
+      allowedAttributes: {},
+    });
+
     const newComment = new Comment({
-      text,
+      text: sanitizedText,
       rating,
       commented_recipe,
       comment_author,
@@ -61,7 +68,12 @@ const updateComment = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Forbidden: You can only update your own comments" });
     }
 
-    comment.text = text || comment.text;
+    if (text) {
+      comment.text = sanitizeHtml(String(text), {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
+    }
     comment.rating = rating !== undefined ? rating : comment.rating;
 
     await comment.save();
@@ -88,6 +100,10 @@ const deleteComment = async (req, res, next) => {
     }
 
     await comment.deleteOne();
+    
+    // Also delete associated reports
+    await Report.deleteMany({ comment_id: id });
+
     res.status(200).json({ success: true, result: { message: "Comment deleted successfully" } });
   } catch (error) {
     next(error);

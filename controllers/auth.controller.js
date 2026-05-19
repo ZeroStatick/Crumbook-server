@@ -1,11 +1,11 @@
-const user = require("../models/user.model.js");
+const User = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res, next) => {
   try {
     req.body.email = req.body.email.toLowerCase();
-    const newUser = await user.create(req.body);
+    const newUser = await User.create(req.body);
     const userResponse = newUser.toJSON();
     delete userResponse.password;
 
@@ -17,7 +17,7 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const foundUser = await user
+    const foundUser = await User
       .findOne({ email: req.body.email.toLowerCase() })
       .select("+password");
     if (!foundUser) {
@@ -32,7 +32,7 @@ const login = async (req, res, next) => {
         .json({ success: false, message: "Invalid email or password" });
     }
     const token = jwt.sign(
-      { _id: foundUser._id, role: foundUser.role },
+      { _id: foundUser._id, role: foundUser.role, name: foundUser.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
