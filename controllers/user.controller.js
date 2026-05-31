@@ -1,5 +1,6 @@
 const user = require("../models/user.model.js");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 
 const getUser = async (req, res, next) => {
   try {
@@ -142,11 +143,24 @@ const toggleFavorite = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const isFavorite = foundUser.favorites.includes(recipeId);
+    // Ensure favorites is initialized as an array to prevent crashes
+    if (!foundUser.favorites) {
+      foundUser.favorites = [];
+    }
+
+    // Robust check using string comparison for ObjectIds
+    const isFavorite = foundUser.favorites.some(id => id.toString() === recipeId);
     
     if (isFavorite) {
       foundUser.favorites = foundUser.favorites.filter(id => id.toString() !== recipeId);
     } else {
+      // Validate that recipeId is a valid ObjectId before pushing
+      if (!mongoose.Types.ObjectId.isValid(recipeId)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid Recipe ID. External recipes cannot be favorited yet." 
+        });
+      }
       foundUser.favorites.push(recipeId);
     }
 
