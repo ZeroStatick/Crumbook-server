@@ -9,6 +9,23 @@ if (!apiKey) {
 }
 
 /**
+ * Fetches a random recipe from Spoonacular.
+ */
+const getRandomRecipe = async () => {
+  const url = `https://api.spoonacular.com/recipes/random?number=1&apiKey=${apiKey}`;
+
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Spoonacular API error: ${response.status} - ${errorBody}`);
+  }
+
+  const data = await response.json();
+  return data.recipes[0];
+};
+
+/**
  * Searches for recipes by a list of ingredients.
  * @param {string[]} ingredients - Array of ingredient names.
  * @param {number} number - Number of results to return (default 10).
@@ -48,5 +65,6 @@ const getRecipeDetails = async (recipeId) => {
 
 module.exports = {
   searchByIngredients,
-  getRecipeDetails
+  getRecipeDetails,
+  getRandomRecipe
 };

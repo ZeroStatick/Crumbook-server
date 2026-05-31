@@ -13,6 +13,10 @@ const getChatResponse = async (req, res, next) => {
 
     const response = await aiService.generateResponse(message, history || []);
     
+    if (!response) {
+      throw new Error("Empty response from AI Chef");
+    }
+
     res.status(200).json({ 
       success: true, 
       result: response 

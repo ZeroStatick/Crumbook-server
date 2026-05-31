@@ -28,6 +28,11 @@ router.post(
   userController.toggleFavorite,
 );
 
+router.post(
+  "/sync-favorites",
+  userController.syncFavorites,
+);
+
 router.put(
   "/:id",
   upload.single("profile_picture"),
