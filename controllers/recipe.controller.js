@@ -82,8 +82,34 @@ const getAllRecipes = async (req, res, next) => {
     // Populate allows us to fetch the author's details and the ingredient details
     const recipes = await Recipe.find(query)
       .populate("author", "name email")
-      .populate("ingredients.item");
-    res.status(200).json({ success: true, result: recipes });
+      .populate("ingredients.item")
+      .lean();
+
+    // Fetch ratings and review counts for these recipes
+    const recipeIds = recipes.map(r => r._id);
+    const ratings = await Comment.aggregate([
+      { $match: { commented_recipe: { $in: recipeIds } } },
+      {
+        $group: {
+          _id: "$commented_recipe",
+          avgRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const ratingsMap = ratings.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr;
+      return acc;
+    }, {});
+
+    const recipesWithRatings = recipes.map(recipe => ({
+      ...recipe,
+      avgRating: ratingsMap[recipe._id.toString()]?.avgRating || 0,
+      numReviews: ratingsMap[recipe._id.toString()]?.numReviews || 0
+    }));
+
+    res.status(200).json({ success: true, result: recipesWithRatings });
   } catch (error) {
     next(error);
   }
@@ -146,6 +172,23 @@ const getRecipeByIngredients = async (req, res, next) => {
     }
 
     // 4. Normalize Local Recipes
+    const localRecipeIds = localRecipesRaw.map(r => r._id);
+    const localRatings = await Comment.aggregate([
+      { $match: { commented_recipe: { $in: localRecipeIds } } },
+      {
+        $group: {
+          _id: "$commented_recipe",
+          avgRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const localRatingsMap = localRatings.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr;
+      return acc;
+    }, {});
+
     const localRecipes = localRecipesRaw.map((recipe) => ({
       _id: recipe._id,
       title: recipe.title,
@@ -157,6 +200,8 @@ const getRecipeByIngredients = async (req, res, next) => {
       difficulty: recipe.difficulty,
       source: recipe.author?.name || "User",
       isExternal: false,
+      avgRating: localRatingsMap[recipe._id.toString()]?.avgRating || 0,
+      numReviews: localRatingsMap[recipe._id.toString()]?.numReviews || 0
     }));
 
     // 5. Normalize External Recipes (Spoonacular)
@@ -175,6 +220,8 @@ const getRecipeByIngredients = async (req, res, next) => {
       source: "Spoonacular",
       isExternal: true,
       externalId: recipe.id,
+      avgRating: 0,
+      numReviews: 0
     }));
 
     // 6. Combine and return
@@ -188,11 +235,34 @@ const getRecipeByIngredients = async (req, res, next) => {
 
 const getAllRecipesByUserId = async (req, res, next) => {
   try {
-    const recipes = await Recipe.find({ author: req.params.id }).populate(
-      "author",
-      "name email",
-    );
-    res.status(200).json({ success: true, result: recipes });
+    const recipes = await Recipe.find({ author: req.params.id })
+      .populate("author", "name email")
+      .lean();
+
+    const recipeIds = recipes.map(r => r._id);
+    const ratings = await Comment.aggregate([
+      { $match: { commented_recipe: { $in: recipeIds } } },
+      {
+        $group: {
+          _id: "$commented_recipe",
+          avgRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const ratingsMap = ratings.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr;
+      return acc;
+    }, {});
+
+    const result = recipes.map(recipe => ({
+      ...recipe,
+      avgRating: ratingsMap[recipe._id.toString()]?.avgRating || 0,
+      numReviews: ratingsMap[recipe._id.toString()]?.numReviews || 0
+    }));
+
+    res.status(200).json({ success: true, result });
   } catch (e) {
     next(e);
   }
@@ -228,6 +298,8 @@ const getRecipeById = async (req, res, next) => {
         instructions: rawRecipe.analyzedInstructions?.[0]?.steps.map((s) => s.step) || [],
         author: { name: "Spoonacular" },
         original_recipe: id,
+        avgRating: 0,
+        numReviews: 0
       };
 
       return res.status(200).json({ success: true, result: normalizedRecipe });
@@ -236,7 +308,8 @@ const getRecipeById = async (req, res, next) => {
     // Otherwise, handle internal MongoDB recipe
     const recipe = await Recipe.findById(id)
       .populate("author", "name email")
-      .populate("ingredients.item");
+      .populate("ingredients.item")
+      .lean();
 
     if (!recipe) {
       return res
@@ -270,7 +343,25 @@ const getRecipeById = async (req, res, next) => {
       }
     }
 
-    res.status(200).json({ success: true, result: recipe });
+    // Fetch ratings for this specific recipe
+    const ratings = await Comment.aggregate([
+      { $match: { commented_recipe: recipe._id } },
+      {
+        $group: {
+          _id: "$commented_recipe",
+          avgRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const result = {
+      ...recipe,
+      avgRating: ratings[0]?.avgRating || 0,
+      numReviews: ratings[0]?.numReviews || 0
+    };
+
+    res.status(200).json({ success: true, result });
   } catch (error) {
     next(error);
   }
